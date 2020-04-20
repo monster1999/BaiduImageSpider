@@ -7,7 +7,7 @@ import urllib
 import json
 import socket
 import urllib.request
-import urllib.parse
+import urllib.parse  # 解析器
 import urllib.error
 # 设置超时
 import time
@@ -16,7 +16,7 @@ timeout = 5
 socket.setdefaulttimeout(timeout)
 
 
-class Crawler:
+class Crawler:  # 类
     # 睡眠时长
     __time_sleep = 0.1
     __amount = 0
@@ -31,7 +31,7 @@ class Crawler:
 
     # 获取后缀名
     def get_suffix(self, name):
-        m = re.search(r'\.[^\.]*$', name)
+        m = re.search(r'\.[^\.]*$', name)  # 正则 判断为.jpg还是.jepg
         if m.group(0) and len(m.group(0)) <= 5:
             return m.group(0)
         else:
@@ -46,16 +46,17 @@ class Crawler:
             return par.netloc
 
         # 保存图片
+
     def save_image(self, rsp_data, word):
-        if not os.path.exists("./" + word):
+        if not os.path.exists("./" + word):  # 如果路径不存在 创建文件夹
             os.mkdir("./" + word)
         # 判断名字是否重复，获取图片长度
-        self.__counter = len(os.listdir('./' + word)) + 1
-        for image_info in rsp_data['imgs']:
+        self.__counter = len(os.listdir('./' + word)) + 1  # os.listdir返回指定的文件夹包含的文件或文件夹的名字的列表 并获取长度
+        for image_info in rsp_data['imgs']:  # rsp_data -> 解码的json数据 数据中['imgs']包含图片链接
 
             try:
-                time.sleep(self.time_sleep)
-                suffix = self.get_suffix(image_info['objURL'])
+                time.sleep(self.time_sleep)  # 延时
+                suffix = self.get_suffix(image_info['objURL'])  # 获取连接图片对应后缀格式
                 # 指定UA和referrer，减少403
                 refer = self.get_referrer(image_info['objURL'])
                 opener = urllib.request.build_opener()
@@ -81,20 +82,20 @@ class Crawler:
 
     # 开始获取
     def get_images(self, word='美女'):
-        search = urllib.parse.quote(word)
+        search = urllib.parse.quote(word)  # 搜索关键词urlencode编码
         # pn int 图片数
-        pn = self.__start_amount
-        while pn < self.__amount:
+        pn = self.__start_amount  # 起始
+        while pn < self.__amount:  # 当图片数小于要抓取的图片数
 
             url = 'http://image.baidu.com/search/avatarjson?tn=resultjsonavatarnew&ie=utf-8&word=' + search + '&cg=girl&pn=' + str(
                 pn) + '&rn=60&itg=0&z=0&fr=&width=&height=&lm=-1&ic=0&s=0&st=-1&gsm=1e0000001e'
             # 设置header防ban
             try:
-                time.sleep(self.time_sleep)
-                req = urllib.request.Request(url=url, headers=self.headers)
-                page = urllib.request.urlopen(req)
-                rsp = page.read().decode('unicode_escape')
-            except UnicodeDecodeError as e:
+                time.sleep(self.time_sleep)  # 睡眠
+                req = urllib.request.Request(url=url, headers=self.headers)  # 创建request对象 伪装user-agent
+                page = urllib.request.urlopen(req)  # get请求
+                rsp = page.read().decode('unicode_escape')  # 解码数据
+            except UnicodeDecodeError as e:  # 异常处理
                 print(e)
                 print('-----UnicodeDecodeErrorurl:', url)
             except urllib.error.URLError as e:
@@ -105,8 +106,8 @@ class Crawler:
                 print("-----socket timout:", url)
             else:
                 # 解析json
-                rsp_data = json.loads(rsp)
-                self.save_image(rsp_data, word)
+                rsp_data = json.loads(rsp)  # 解码 JSON 数据
+                self.save_image(rsp_data, word)  # 保存图片
                 # 读取下一页
                 print("下载下一页")
                 pn += 60
@@ -132,5 +133,5 @@ if __name__ == '__main__':
     crawler = Crawler(0.05)  # 抓取延迟为 0.05
 
     # crawler.start('美女', 10, 2)  # 抓取关键词为 “美女”，总数为 1 页（即总共 1*60=60 张），开始页码为 2
-    crawler.start('二次元 美女', 10, 1)  # 抓取关键词为 “二次元 美女”，总数为 10 页（即总共 10*60=600 张），起始抓取的页码为 1
+    crawler.start('亚丝娜', 10, 1)  # 抓取关键词为 “二次元 美女”，总数为 10 页（即总共 10*60=600 张），起始抓取的页码为 1
     # crawler.start('帅哥', 5)  # 抓取关键词为 “帅哥”，总数为 5 页（即总共 5*60=300 张）
